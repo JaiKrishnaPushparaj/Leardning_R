@@ -15,5 +15,39 @@ twitter_token <- create_token(
   consumer_secret = secret,
   access_token = access_token,
   access_secret = access_secret)
-rstats_tweets <- search_tweets(q = "BigilAUdioLanch",n = 10,lang = "en", )
-print(rstats_tweets$text)
+users <- search_tweets(q = "#modi",n = 100,lang = "en",include_rts = FALSE )
+length(unique(users$location))
+users %>%
+  ggplot(aes(location)) +
+  geom_bar() + coord_flip() +
+  labs(x = "Count",
+       y = "Location",
+       title = "Twitter users - unique locations ")
+users %>%
+  count(location, sort = TRUE) %>%
+  top_n(10)%>%
+  mutate(location = reorder(location,n)) %>%
+  na.omit() %>%
+  ggplot(aes(x = location,y = n)) +
+  geom_col() +
+  coord_flip() +
+  labs(x = "Location",
+       y = "Count",
+       title = "Twitter users - unique locations ") 
+
+users$stripped_text <- gsub("http.*","",  users$text)
+users$stripped_text <- gsub("https.*","", users$stripped_text)
+users_clean <- users%>%
+  dplyr::select(stripped_text) %>%
+  unnest_tokens(word, stripped_text)
+users_clean %>%
+  count(word, sort = TRUE) %>%
+  top_n(9) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(x = word, y = n)) +
+  geom_col() +
+  xlab(NULL) +
+  coord_flip() +
+  labs(x = "Count",
+       y = "Unique words",
+       title = "Count of unique words found in tweets")
